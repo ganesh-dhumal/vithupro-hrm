@@ -4,7 +4,7 @@ pipeline {
   environment {
     IMAGE_NAME     = "vithupro-hrm"
     CONTAINER_NAME = "vithupro-hrm-container"
-    APP_PORT       = "5000"          // change if your app uses a different port
+    APP_PORT       = "8000"          // change if your app uses a different port
   }
 
   triggers {
