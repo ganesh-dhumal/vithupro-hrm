@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.get("/")
 def hello():
-    return "Hello, World! Deployed via Docker + CI/CD 🚀"
+    return "Hello, World! Deployed via Docker + CI/CD on Local 🚀"
 
 if __name__ == "__main__":
     # For local dev only; in Docker we’ll run gunicorn
