@@ -3,7 +3,7 @@ pipeline {
     environment {
         IMAGE_NAME = "vithupro-hrm"
         CONTAINER_NAME = "vithupro-hrm-container"
-        APP_PORT = "5000"
+        APP_PORT = "8000"
     }
     triggers {
         pollSCM('H/2 * * * *')
