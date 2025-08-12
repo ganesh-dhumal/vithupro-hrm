@@ -1,14 +1,15 @@
+version: "3.8"
+
 services:
-  web:
+  app:
     build: .
-    image: hello-flask:latest
-    container_name: hello-flask
+    image: vithupro-hrm:latest
+    container_name: vithupro-hrm
     ports:
       - "8000:8000"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/ || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 5
-
