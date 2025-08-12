@@ -1,3 +1,6 @@
+environment {
+  DOCKER_BUILDKIT = '0'
+}
 pipeline {
     agent any
     environment {
