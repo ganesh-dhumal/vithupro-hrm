@@ -1,60 +1,70 @@
 pipeline {
-    agent any
+  agent any
 
-    environment {
-        IMAGE_NAME = "vithupro-hrm"
-        CONTAINER_NAME = "vithupro-hrm-container"
-        APP_PORT = "5000"  // Change this if your app uses another port
+  environment {
+    IMAGE_NAME     = "vithupro-hrm"
+    CONTAINER_NAME = "vithupro-hrm-container"
+    APP_PORT       = "5000"          // change if your app uses a different port
+  }
+
+  triggers {
+    // Auto every push via polling (no public webhook needed)
+    pollSCM('H/2 * * * *')
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/ganesh-dhumal/vithupro-hrm.git'
+      }
     }
 
-    triggers {
-        // Poll GitHub every 2 minutes (works without webhook/public Jenkins)
-        pollSCM('H/2 * * * *')
+    stage('Build Docker Image') {
+      steps {
+        sh '''
+          set -e
+          GIT_SHA=$(git rev-parse --short HEAD)
+          echo "Building image ${IMAGE_NAME}:${GIT_SHA}"
+          docker build --pull -t ${IMAGE_NAME}:latest -t ${IMAGE_NAME}:${GIT_SHA} .
+        '''
+      }
     }
 
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/ganesh-dhumal/vithupro-hrm.git'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh "docker build -t ${IMAGE_NAME}:latest ."
-            }
-        }
-
-        stage('Stop Old Container') {
-            steps {
-                script {
-                    sh """
-                    if [ \$(docker ps -q -f name=${CONTAINER_NAME}) ]; then
-                        echo "Stopping and removing old container..."
-                        docker stop ${CONTAINER_NAME}
-                        docker rm ${CONTAINER_NAME}
-                    fi
-                    """
-                }
-            }
-        }
-
-        stage('Run New Container') {
-            steps {
-                sh """
-                echo "Starting new container..."
-                docker run -d --name ${CONTAINER_NAME} -p ${APP_PORT}:${APP_PORT} ${IMAGE_NAME}:latest
-                """
-            }
-        }
+    stage('Stop & Remove Old Container') {
+      steps {
+        sh '''
+          set -e
+          if [ "$(docker ps -aq -f name=${CONTAINER_NAME})" ]; then
+            echo "Stopping/removing old container: ${CONTAINER_NAME}"
+            docker rm -f ${CONTAINER_NAME} || true
+          else
+            echo "No previous container to remove."
+          fi
+        '''
+      }
     }
 
-    post {
-        success {
-            echo "Deployment completed successfully."
-        }
-        failure {
-            echo "Deployment failed. Please check the Jenkins logs."
-        }
+    stage('Run New Container') {
+      steps {
+        sh '''
+          set -e
+          echo "Starting new container: ${CONTAINER_NAME}"
+          docker run -d --name ${CONTAINER_NAME} \
+            -p ${APP_PORT}:${APP_PORT} \
+            --restart unless-stopped \
+            ${IMAGE_NAME}:latest
+        '''
+      }
     }
+  }
+
+  post {
+    success {
+      echo "✅ Deployed ${IMAGE_NAME}:latest to container ${CONTAINER_NAME}"
+      sh 'docker image prune -f || true'   // keep disk tidy
+    }
+    failure {
+      echo "❌ Build/Deploy failed — check Console Output."
+    }
+  }
 }
