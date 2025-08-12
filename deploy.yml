@@ -1,0 +1,26 @@
+name: Build & Deploy (Local via Self-Hosted Runner)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Docker version
+        run: |
+          docker version
+          docker compose version
+
+      - name: Build & Run with Docker Compose
+        run: |
+          # Stop/remove any old containers of this project (safe due to project name)
+          docker compose down --remove-orphans || true
+          # Build new image and start
+          docker compose up -d --build
+          # Show status
+          docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'

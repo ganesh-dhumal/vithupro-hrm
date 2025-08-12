@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    image: hello-flask:latest
+    container_name: hello-flask
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
