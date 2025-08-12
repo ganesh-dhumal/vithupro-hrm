@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.get("/")
 def root():
-    return "Hello, World! Deployed via Jenkins + Docker 🧩"
+    return "Hello, World! Deployed via Jenkins + Docker on local "
 
 if __name__ == "__main__":
     # Dev only; in Docker we use gunicorn (see Dockerfile)
